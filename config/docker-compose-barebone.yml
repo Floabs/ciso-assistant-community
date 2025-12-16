@@ -5,10 +5,16 @@ services:
     pull_policy: always
     restart: always
     environment:
-      - ALLOWED_HOSTS=backend,localhost
-      - CISO_ASSISTANT_URL=http://localhost:3000
-      - DJANGO_DEBUG=True
-      - AUTH_TOKEN_TTL=7200
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-backend,localhost}
+      - CISO_ASSISTANT_URL=${CISO_ASSISTANT_URL:-http://localhost:3000}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - AUTH_TOKEN_TTL=${AUTH_TOKEN_TTL:-7200}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-ciso-assistant@localhost}
+      - EMAIL_HOST=${EMAIL_HOST:-localhost}
+      - EMAIL_PORT=${EMAIL_PORT:-25}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-False}
+      - MAIL_DEBUG=${MAIL_DEBUG:-False}
     volumes:
       - ./db:/code/db
     healthcheck:
@@ -18,7 +24,7 @@ services:
       retries: 10
       start_period: 60s
     ports:
-      - 8000:8000
+      - ${BACKEND_HOST_PORT:-8000}:8000
 
   huey:
     container_name: huey
@@ -29,10 +35,16 @@ services:
         condition: service_healthy
     restart: always
     environment:
-      - ALLOWED_HOSTS=backend,localhost
-      - CISO_ASSISTANT_URL=http://localhost:3000
-      - DJANGO_DEBUG=False
-      - AUTH_TOKEN_TTL=7200
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-backend,localhost}
+      - CISO_ASSISTANT_URL=${CISO_ASSISTANT_URL:-http://localhost:3000}
+      - DJANGO_DEBUG=${HUEY_DJANGO_DEBUG:-False}
+      - AUTH_TOKEN_TTL=${AUTH_TOKEN_TTL:-7200}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-ciso-assistant@localhost}
+      - EMAIL_HOST=${EMAIL_HOST:-localhost}
+      - EMAIL_PORT=${EMAIL_PORT:-25}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-False}
+      - MAIL_DEBUG=${MAIL_DEBUG:-False}
 
     volumes:
       - ./db:/code/db
@@ -45,15 +57,15 @@ services:
   frontend:
     container_name: frontend
     environment:
-      - PUBLIC_BACKEND_API_URL=http://backend:8000/api
-      - PUBLIC_BACKEND_API_EXPOSED_URL=http://localhost:8000/api
-      - ORIGIN=http://localhost:3000
-      - PROTOCOL_HEADER=x-forwarded-proto
-      - HOST_HEADER=x-forwarded-host
+      - PUBLIC_BACKEND_API_URL=${PUBLIC_BACKEND_API_URL:-http://backend:8000/api}
+      - PUBLIC_BACKEND_API_EXPOSED_URL=${PUBLIC_BACKEND_API_EXPOSED_URL:-http://localhost:8000/api}
+      - ORIGIN=${ORIGIN:-http://localhost:3000}
+      - PROTOCOL_HEADER=${PROTOCOL_HEADER:-x-forwarded-proto}
+      - HOST_HEADER=${HOST_HEADER:-x-forwarded-host}
     image: ghcr.io/intuitem/ciso-assistant-community/frontend:latest
     pull_policy: always
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - 3000:3000
+      - ${FRONTEND_HOST_PORT:-3000}:3000
